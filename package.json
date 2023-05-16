@@ -44,6 +44,7 @@
     ]
   },
   "devDependencies": {
+    "classnames": "^2.3.2",
     "concurrently": "^8.0.1",
     "json-server": "^0.17.3",
     "react-redux": "^8.0.5",
