@@ -1,8 +1,8 @@
-import { Action, AnyAction } from 'redux';
+import { Action } from 'redux';
 import { ThunkAction } from 'redux-thunk';
 import { RootState } from './store';
 
-interface UserEvent {
+export interface UserEvent {
   id: number;
   title: string;
   dateStart: string;
@@ -13,6 +13,8 @@ interface UserEventsState {
   byIds: Record<UserEvent['id'], UserEvent>;
   allIds: UserEvent['id'][];
 }
+
+// Use redux-thunk to load events
 const LOAD_REQUEST = 'userEvents/load_request';
 const LOAD_SUCCESS = 'userEvents/load_success';
 const LOAD_FAILURE = 'userEvents/load_failure';
@@ -56,6 +58,15 @@ export const loadUserEvent =
       });
     }
   };
+
+// Using connect to fetch the data / load events
+const selectUserEventState = (rootState: RootState) => rootState.userEvents;
+
+export const selectUserEventsArray = (rootState: RootState) => {
+  const state = selectUserEventState(rootState);
+
+  return state.allIds.map((id) => state.byIds[id]);
+};
 
 const initialState: UserEventsState = {
   byIds: {},
