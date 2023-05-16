@@ -1,4 +1,5 @@
-import { combineReducers, createStore } from 'redux';
+import { applyMiddleware, combineReducers, createStore } from 'redux';
+import thunk from 'redux-thunk';
 import userEventsReducer from './user-events';
 import recorderReducer from './recorder';
 
@@ -11,6 +12,6 @@ const rootReducer = combineReducers(reducer);
 
 export type RootState = ReturnType<typeof rootReducer>;
 
-const store = createStore(rootReducer);
+const store = createStore(rootReducer, applyMiddleware(thunk));
 
 export default store;
