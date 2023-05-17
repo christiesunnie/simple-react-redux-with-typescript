@@ -115,6 +115,56 @@ export const createUserEvent =
     }
   };
 
+const DELETE_REQUEST = 'userEvents/delete_request';
+const DELETE_SUCCESS_REQUEST = 'userEvents/delete_success_request';
+const DELETE_FAILURE_REQUEST = 'userEvents/delete_failure_request';
+
+interface DeleteRequestAction extends Action<typeof DELETE_REQUEST> {}
+
+interface DeleteSuccessRequestAction
+  extends Action<typeof DELETE_SUCCESS_REQUEST> {
+  payload: {
+    id: UserEvent['id'];
+  };
+}
+
+interface DeleteFailureRequestAction
+  extends Action<typeof DELETE_FAILURE_REQUEST> {}
+
+export const deleteUserEvent =
+  (
+    id: UserEvent['id']
+  ): ThunkAction<
+    Promise<void>,
+    RootState,
+    undefined,
+    | DeleteRequestAction
+    | DeleteSuccessRequestAction
+    | DeleteFailureRequestAction
+  > =>
+  async (dispatch) => {
+    dispatch({
+      type: DELETE_REQUEST,
+    });
+
+    try {
+      const response = await fetch(`http://localhost:3001/events/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        dispatch({
+          type: DELETE_SUCCESS_REQUEST,
+          payload: { id },
+        });
+      }
+    } catch (e) {
+      dispatch({
+        type: DELETE_FAILURE_REQUEST,
+      });
+    }
+  };
+
 // Using connect to fetch the data / load events
 const selectUserEventState = (rootState: RootState) => rootState.userEvents;
 
@@ -131,7 +181,7 @@ const initialState: UserEventsState = {
 
 const userEventsReducer = (
   state: UserEventsState = initialState,
-  action: LoadSuccessAction | CreateSuccessAction
+  action: LoadSuccessAction | CreateSuccessAction | DeleteSuccessRequestAction
 ) => {
   switch (action.type) {
     case LOAD_SUCCESS:
@@ -154,6 +204,16 @@ const userEventsReducer = (
         allIds: [...state.allIds, event.id],
         byIds: { ...state.byIds, [event.id]: event },
       };
+
+    case DELETE_SUCCESS_REQUEST:
+      const { id } = action.payload;
+      const newState = {
+        ...state,
+        byIds: { ...state.byIds },
+        allIds: state.allIds.filter((storedId) => storedId !== id),
+      };
+
+      return newState;
 
     default:
       return state;
