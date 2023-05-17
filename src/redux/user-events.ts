@@ -165,6 +165,57 @@ export const deleteUserEvent =
     }
   };
 
+const EDIT_REQUEST = 'userEvents/edit_request';
+const EDIT_SUCCESS_REQUEST = 'userEvents/edit_success_request';
+const EDIT_FAILURE_REQUEST = 'userEvents/edit_failure_request';
+
+interface EditRequestAction extends Action<typeof EDIT_REQUEST> {}
+
+interface EditSuccessRequestAction extends Action<typeof EDIT_SUCCESS_REQUEST> {
+  payload: {
+    event: UserEvent;
+  };
+}
+
+interface EditFailureRequestAction
+  extends Action<typeof EDIT_FAILURE_REQUEST> {}
+
+export const editUserEvent =
+  (
+    event: UserEvent
+  ): ThunkAction<
+    Promise<void>,
+    RootState,
+    undefined,
+    EditRequestAction | EditSuccessRequestAction | EditFailureRequestAction
+  > =>
+  async (dispatch) => {
+    dispatch({
+      type: EDIT_REQUEST,
+    });
+
+    try {
+      const response = await fetch(`http://localhost:3001/events/${event.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(event),
+      });
+
+      const editedEvent: UserEvent = await response.json();
+
+      dispatch({
+        type: EDIT_SUCCESS_REQUEST,
+        payload: { event: editedEvent },
+      });
+    } catch (e) {
+      dispatch({
+        type: EDIT_FAILURE_REQUEST,
+      });
+    }
+  };
+
 // Using connect to fetch the data / load events
 const selectUserEventState = (rootState: RootState) => rootState.userEvents;
 
@@ -181,7 +232,11 @@ const initialState: UserEventsState = {
 
 const userEventsReducer = (
   state: UserEventsState = initialState,
-  action: LoadSuccessAction | CreateSuccessAction | DeleteSuccessRequestAction
+  action:
+    | LoadSuccessAction
+    | CreateSuccessAction
+    | DeleteSuccessRequestAction
+    | EditSuccessRequestAction
 ) => {
   switch (action.type) {
     case LOAD_SUCCESS:
@@ -214,6 +269,14 @@ const userEventsReducer = (
       };
 
       return newState;
+
+    case EDIT_SUCCESS_REQUEST:
+      const { event: editEvent } = action.payload;
+      const editedState = {
+        ...state,
+        byIds: { ...state.byIds, [editEvent.id]: editEvent },
+      };
+      return editedState;
 
     default:
       return state;
